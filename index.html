@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pista Llena — Edmond Bojalil</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #F5F0E8;
+      --black: #0E0C0A;
+      --gold: #C9A84C;
+      --gold-light: #E8C96A;
+      --warm-gray: #8A8378;
+      --red: #B03A2E;
+      --section-pad: clamp(5rem, 10vw, 9rem);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--black);
+      color: var(--cream);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.35;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 4vw;
+      background: linear-gradient(to bottom, rgba(14,12,10,0.95), transparent);
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      letter-spacing: 0.15em;
+      color: var(--gold);
+      text-decoration: none;
+    }
+    .nav-links { display: flex; gap: 2.5rem; list-style: none; }
+    .nav-links a {
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--cream);
+      text-decoration: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .nav-links a:hover { opacity: 1; color: var(--gold); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      position: relative;
+      padding: 6rem 4vw 4rem;
+      overflow: hidden;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 50% 100%, rgba(201,168,76,0.12) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 30%, rgba(176,58,46,0.08) 0%, transparent 60%),
+        var(--black);
+    }
+    .hero-vinyl {
+      position: absolute;
+      right: -8vw;
+      top: 50%;
+      transform: translateY(-50%);
+      width: clamp(300px, 45vw, 650px);
+      height: clamp(300px, 45vw, 650px);
+      border-radius: 50%;
+      background: conic-gradient(
+        from 0deg,
+        #1a1814 0deg, #252220 30deg, #1a1814 60deg,
+        #252220 90deg, #1a1814 120deg, #252220 150deg,
+        #1a1814 180deg, #252220 210deg, #1a1814 240deg,
+        #252220 270deg, #1a1814 300deg, #252220 330deg, #1a1814 360deg
+      );
+      box-shadow: 0 0 80px rgba(201,168,76,0.15), inset 0 0 40px rgba(0,0,0,0.5);
+      animation: spin 25s linear infinite;
+      opacity: 0.6;
+    }
+    .hero-vinyl::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22%;
+      height: 22%;
+      border-radius: 50%;
+      background: radial-gradient(circle, #C9A84C 0%, #8a6a20 60%, #3a2a08 100%);
+      box-shadow: 0 0 20px rgba(201,168,76,0.4);
+    }
+    @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 620px;
+    }
+    .hero-eyebrow {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.25em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.2s forwards;
+    }
+    .hero-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(3.5rem, 8vw, 7rem);
+      font-weight: 900;
+      line-height: 0.95;
+      margin-bottom: 0.3em;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.4s forwards;
+    }
+    .hero-title em {
+      font-style: italic;
+      color: var(--gold);
+      display: block;
+    }
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.2rem);
+      color: var(--warm-gray);
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.6s forwards;
+    }
+    .hero-author {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1rem;
+      color: var(--cream);
+      margin-bottom: 3rem;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.7s forwards;
+    }
+    .hero-ctas {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s 0.9s forwards;
+    }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+      padding: 0.9rem 2rem;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.82rem;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary {
+      background: var(--gold);
+      color: var(--black);
+      box-shadow: 0 4px 24px rgba(201,168,76,0.35);
+    }
+    .btn-primary:hover { background: var(--gold-light); box-shadow: 0 8px 32px rgba(201,168,76,0.5); }
+    .btn-outline {
+      background: transparent;
+      color: var(--cream);
+      border: 1px solid rgba(245,240,232,0.3);
+    }
+    .btn-outline:hover { border-color: var(--gold); color: var(--gold); }
+
+    /* ── SECTION BASE ── */
+    section { padding: var(--section-pad) 4vw; }
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      font-weight: 700;
+      line-height: 1.15;
+      margin-bottom: 1.5rem;
+    }
+    .section-title em { font-style: italic; color: var(--gold); }
+
+    /* ── DIVIDER ── */
+    .divider {
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(201,168,76,0.3), transparent);
+    }
+
+    /* ── SOBRE EL LIBRO ── */
+    .sobre {
+      background: linear-gradient(to bottom, var(--black), #141210);
+    }
+    .sobre-grid {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6vw;
+      align-items: center;
+    }
+    .book-cover {
+      position: relative;
+      aspect-ratio: 2/3;
+      background: linear-gradient(135deg, #1c1a16 0%, #2a2620 40%, #1a1612 100%);
+      border: 1px solid rgba(201,168,76,0.25);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      box-shadow: 20px 20px 60px rgba(0,0,0,0.6), -4px 0 20px rgba(201,168,76,0.05);
+      transform: perspective(800px) rotateY(-5deg);
+      transition: transform 0.4s;
+    }
+    .book-cover:hover { transform: perspective(800px) rotateY(0deg); }
+    .book-cover-spine {
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 12px;
+      background: linear-gradient(to right, rgba(201,168,76,0.6), rgba(201,168,76,0.1));
+      border-radius: 1px 0 0 1px;
+    }
+    .book-cover-ornament {
+      width: 60px;
+      height: 2px;
+      background: var(--gold);
+      margin-bottom: 2rem;
+    }
+    .book-cover-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.4rem;
+      font-weight: 900;
+      text-align: center;
+      line-height: 1;
+      color: var(--cream);
+    }
+    .book-cover-title em {
+      display: block;
+      font-style: italic;
+      color: var(--gold);
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-top: 0.5rem;
+      letter-spacing: 0.1em;
+    }
+    .book-cover-author {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 0.9rem;
+      color: var(--warm-gray);
+      margin-top: 2rem;
+      text-align: center;
+    }
+    .book-cover-vinyl {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: conic-gradient(#2a2820 0deg 45deg, #1a1814 45deg 90deg, #2a2820 90deg 135deg, #1a1814 135deg 180deg, #2a2820 180deg 225deg, #1a1814 225deg 270deg, #2a2820 270deg 315deg, #1a1814 315deg 360deg);
+      opacity: 0.6;
+    }
+    .book-cover-vinyl::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 25%;
+      height: 25%;
+      border-radius: 50%;
+      background: var(--gold);
+    }
+
+    .sobre-text p {
+      color: var(--warm-gray);
+      line-height: 1.9;
+      margin-bottom: 1.2rem;
+      font-size: 1rem;
+    }
+    .sobre-text p strong { color: var(--cream); font-weight: 500; }
+    .sobre-stats {
+      display: flex;
+      gap: 2.5rem;
+      margin: 2.5rem 0;
+      padding: 2rem 0;
+      border-top: 1px solid rgba(201,168,76,0.15);
+      border-bottom: 1px solid rgba(201,168,76,0.15);
+    }
+    .stat-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--warm-gray);
+      margin-top: 0.3rem;
+    }
+
+    /* ── COMPRA ── */
+    .compra {
+      background: #0A0908;
+      position: relative;
+      overflow: hidden;
+    }
+    .compra::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(201,168,76,0.07) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .compra-inner {
+      max-width: 700px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .compra-inner .section-title { margin-bottom: 0.5rem; }
+    .compra-inner > p {
+      color: var(--warm-gray);
+      margin-bottom: 3rem;
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+    .compra-options {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .compra-card {
+      background: rgba(245,240,232,0.03);
+      border: 1px solid rgba(201,168,76,0.2);
+      padding: 2rem 1.5rem;
+      border-radius: 2px;
+      transition: border-color 0.3s, background 0.3s;
+      text-align: left;
+    }
+    .compra-card:hover {
+      border-color: rgba(201,168,76,0.5);
+      background: rgba(201,168,76,0.04);
+    }
+    .compra-card-icon {
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+    }
+    .compra-card h3 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.15rem;
+      margin-bottom: 0.5rem;
+      color: var(--cream);
+    }
+    .compra-card p {
+      font-size: 0.82rem;
+      color: var(--warm-gray);
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+    .compra-card .price {
+      font-family: 'DM Mono', monospace;
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 1.2rem;
+    }
+    .compra-card .price span {
+      font-size: 0.75rem;
+      color: var(--warm-gray);
+      font-family: 'DM Sans', sans-serif;
+    }
+    .compra-note {
+      font-size: 0.75rem;
+      color: var(--warm-gray);
+      opacity: 0.6;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── DONATIVO ── */
+    .donativo {
+      background: linear-gradient(135deg, #0E0C0A 0%, #140F0A 100%);
+      position: relative;
+    }
+    .donativo-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5vw;
+      align-items: center;
+    }
+    .donativo-text p {
+      color: var(--warm-gray);
+      line-height: 1.9;
+      margin-bottom: 1.2rem;
+      font-size: 1rem;
+    }
+    .donativo-amounts {
+      display: flex;
+      gap: 0.8rem;
+      flex-wrap: wrap;
+      margin: 1.5rem 0;
+    }
+    .amount-btn {
+      padding: 0.6rem 1.2rem;
+      border: 1px solid rgba(201,168,76,0.3);
+      background: transparent;
+      color: var(--cream);
+      font-family: 'DM Mono', monospace;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.2s;
+    }
+    .amount-btn:hover, .amount-btn.active {
+      background: var(--gold);
+      color: var(--black);
+      border-color: var(--gold);
+    }
+    .donativo-quote {
+      background: rgba(201,168,76,0.06);
+      border-left: 3px solid var(--gold);
+      padding: 2rem;
+      border-radius: 0 2px 2px 0;
+    }
+    .donativo-quote blockquote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 1.15rem;
+      line-height: 1.7;
+      color: var(--cream);
+      margin-bottom: 1rem;
+    }
+    .donativo-quote cite {
+      font-size: 0.78rem;
+      color: var(--warm-gray);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-style: normal;
+    }
+
+    /* ── HISTORIAS ── */
+    .historias {
+      background: var(--black);
+    }
+    .historias-inner {
+      max-width: 800px;
+      margin: 0 auto;
+      text-align: center;
+    }
+    .historias-inner > p {
+      color: var(--warm-gray);
+      line-height: 1.8;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+    }
+    .form-wrap {
+      background: rgba(245,240,232,0.02);
+      border: 1px solid rgba(201,168,76,0.15);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+    .form-wrap iframe {
+      width: 100%;
+      min-height: 600px;
+      border: none;
+      display: block;
+    }
+    .form-placeholder {
+      padding: 4rem 2rem;
+      color: var(--warm-gray);
+      font-size: 0.9rem;
+      line-height: 1.7;
+    }
+    .form-placeholder .icon { font-size: 2.5rem; margin-bottom: 1rem; }
+
+    /* ── FOOTER ── */
+    footer {
+      background: #070605;
+      padding: 3rem 4vw;
+      text-align: center;
+      border-top: 1px solid rgba(201,168,76,0.1);
+    }
+    .footer-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+    }
+    .footer-sub {
+      font-size: 0.78rem;
+      color: var(--warm-gray);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 2rem;
+    }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      list-style: none;
+      margin-bottom: 2rem;
+    }
+    .footer-links a {
+      font-size: 0.75rem;
+      color: var(--warm-gray);
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .footer-links a:hover { color: var(--gold); }
+    .footer-copy {
+      font-size: 0.72rem;
+      color: var(--warm-gray);
+      opacity: 0.4;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .hero-vinyl { opacity: 0.15; right: -20vw; width: 80vw; height: 80vw; }
+      .sobre-grid,
+      .compra-options,
+      .donativo-inner { grid-template-columns: 1fr; }
+      .book-cover { transform: none; max-width: 280px; margin: 0 auto; }
+      .sobre-stats { gap: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAV -->
+  <nav>
+    <a href="#" class="nav-logo">Pista Llena</a>
+    <ul class="nav-links">
+      <li><a href="#sobre">El libro</a></li>
+      <li><a href="#compra">Comprar</a></li>
+      <li><a href="#donativo">Donar</a></li>
+      <li><a href="#historias">Tu historia</a></li>
+    </ul>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="inicio">
+    <div class="hero-bg"></div>
+    <div class="hero-vinyl"></div>
+    <div class="hero-content">
+      <p class="hero-eyebrow">Una vida detrás de la cabina</p>
+      <h1 class="hero-title">
+        Pista
+        <em>Llena</em>
+      </h1>
+      <p class="hero-subtitle">50 años de música, noches y gente que no quería irse a casa.</p>
+      <p class="hero-author">Edmond Bojalil</p>
+      <div class="hero-ctas">
+        <a href="#compra" class="btn btn-primary">
+          <span>Conseguir el libro</span>
+        </a>
+        <a href="#sobre" class="btn btn-outline">
+          <span>Conocer la historia</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- SOBRE EL LIBRO -->
+  <section class="sobre" id="sobre">
+    <div class="sobre-grid">
+      <!-- Portada simulada -->
+      <div class="book-cover">
+        <div class="book-cover-spine"></div>
+        <div class="book-cover-ornament"></div>
+        <div class="book-cover-title">
+          Pista Llena
+          <em>Una vida detrás de la cabina</em>
+        </div>
+        <div class="book-cover-author">Edmond Bojalil</div>
+        <div class="book-cover-vinyl"></div>
+      </div>
+
+      <!-- Texto -->
+      <div class="sobre-text">
+        <p class="section-label">Sobre el libro</p>
+        <h2 class="section-title">Una historia que <em>se escucha</em> más de lo que se lee</h2>
+        <p>
+          <strong>Edmond Bojalil</strong> fue el DJ que definió la vida nocturna de Puebla durante cinco décadas.
+          Desde los primeros acetatos en el Salón Terraza hasta las bodas donde bailaron tres generaciones de la misma familia,
+          su historia es también la historia de una ciudad y una época.
+        </p>
+        <p>
+          Este libro nació de horas de grabaciones en las que Edmond contó su vida con sus propias palabras:
+          las noches en Le Charmants, los 600 discos traídos de Europa, el encuentro con Jack Nicholson en Saint-Tropez,
+          y los seis años en que siguió tocando mientras peleaba contra el cáncer.
+        </p>
+        <p>
+          Una historia de música, familia y amor por el oficio. Contada desde adentro.
+        </p>
+
+        <div class="sobre-stats">
+          <div>
+            <div class="stat-num">50</div>
+            <div class="stat-label">Años en la cabina</div>
+          </div>
+          <div>
+            <div class="stat-num">12</div>
+            <div class="stat-label">Capítulos</div>
+          </div>
+          <div>
+            <div class="stat-num">∞</div>
+            <div class="stat-label">Pistas llenas</div>
+          </div>
+        </div>
+
+        <a href="#compra" class="btn btn-primary">Quiero este libro</a>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- COMPRA -->
+  <section class="compra" id="compra">
+    <div class="compra-inner">
+      <p class="section-label">Consíguelo</p>
+      <h2 class="section-title">Elige tu <em>formato</em></h2>
+      <p>Disponible en versión digital con descarga inmediata, y en Amazon para formato impreso o Kindle.</p>
+
+      <div class="compra-options">
+        <!-- PDF -->
+        <div class="compra-card">
+          <div class="compra-card-icon">📄</div>
+          <h3>PDF Digital</h3>
+          <p>Descarga inmediata tras el pago. Lee en cualquier dispositivo, sin DRM.</p>
+          <div class="price">$99 <span>MXN</span></div>
+          <!-- REEMPLAZA href con tu Stripe Payment Link -->
+          <a href="TU_STRIPE_PAYMENT_LINK_AQUI" class="btn btn-primary" style="width:100%; justify-content:center;">
+            Comprar PDF
+          </a>
+        </div>
+
+        <!-- Amazon -->
+        <div class="compra-card">
+          <div class="compra-card-icon">📦</div>
+          <h3>Impreso + Kindle</h3>
+          <p>Versión física o Kindle a través de Amazon. Entrega a domicilio en México y el mundo.</p>
+          <div class="price">Ver en <span>Amazon</span></div>
+          <!-- REEMPLAZA href con tu link de Amazon KDP -->
+          <a href="TU_LINK_AMAZON_AQUI" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center;">
+            Ver en Amazon
+          </a>
+        </div>
+      </div>
+
+      <p class="compra-note">🔒 Pagos procesados de forma segura a través de Stripe &nbsp;|&nbsp; Todas las ganancias van destinadas a la familia Bojalil</p>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- DONATIVO -->
+  <section class="donativo" id="donativo">
+    <div class="donativo-inner">
+      <div class="donativo-text">
+        <p class="section-label">Apoya la causa</p>
+        <h2 class="section-title">Cada donativo <em>importa</em></h2>
+        <p>
+          Este libro fue hecho con amor y con la intención de que las ganancias lleguen directamente a
+          <strong style="color:var(--cream)">Erika</strong>, la esposa de Edmond, quien lo acompañó en cada batalla.
+        </p>
+        <p>
+          Si el libro te movió, si bailaste alguna vez con Edmond, o simplemente quieres contribuir,
+          cualquier aportación es bienvenida y va directamente a quien más lo necesita.
+        </p>
+        <div class="donativo-amounts">
+          <button class="amount-btn">$50</button>
+          <button class="amount-btn active">$100</button>
+          <button class="amount-btn">$200</button>
+          <button class="amount-btn">$500</button>
+          <button class="amount-btn">Otro</button>
+        </div>
+        <!-- REEMPLAZA href con tu Stripe Donation Link -->
+        <a href="TU_STRIPE_DONATION_LINK_AQUI" class="btn btn-primary">
+          Donar ahora
+        </a>
+      </div>
+
+      <div class="donativo-quote">
+        <blockquote>
+          "Quiero agradecer a toda la gente que me permitió divertirla. Quedé muy agradecido con todos ustedes por la confianza que me tuvieron."
+        </blockquote>
+        <cite>— Edmond Bojalil</cite>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- HISTORIAS -->
+  <section class="historias" id="historias">
+    <div class="historias-inner">
+      <p class="section-label">Tu historia</p>
+      <h2 class="section-title">¿Estuviste en <em>la pista?</em></h2>
+      <p>
+        Si Edmond tocó en tu boda, tus quince años, tu cumpleaños o simplemente en una noche que no olvidaste,
+        cuéntanosla. Las mejores historias podrían formar parte de una edición ampliada del libro.
+      </p>
+
+      <div class="form-wrap">
+        <!--
+          INSTRUCCIONES:
+          1. Ve a forms.google.com y crea un formulario con campos:
+             - Tu nombre
+             - Tu historia (párrafo largo)
+             - ¿En qué año o evento fue?
+             - ¿Tienes una foto? (subida de archivo)
+          2. Haz clic en "Enviar" → ícono de enlace → "Insertar HTML"
+          3. Copia el <iframe> y reemplaza el div de abajo con él.
+        -->
+        <div class="form-placeholder">
+          <div class="icon">✍️</div>
+          <p><strong style="color:var(--cream)">El formulario estará aquí muy pronto.</strong></p>
+          <p>Mientras tanto puedes escribirnos directamente a<br>
+          <a href="mailto:hola@pistallena.com" style="color:var(--gold)">hola@pistallena.com</a></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-logo">Pista Llena</div>
+    <div class="footer-sub">Edmond Bojalil · 1953 – 2025</div>
+    <ul class="footer-links">
+      <li><a href="#sobre">El libro</a></li>
+      <li><a href="#compra">Comprar</a></li>
+      <li><a href="#donativo">Donar</a></li>
+      <li><a href="#historias">Tu historia</a></li>
+      <li><a href="mailto:hola@pistallena.com">Contacto</a></li>
+    </ul>
+    <p class="footer-copy">© 2025 Familia Bojalil · Todos los derechos reservados · pistallena.com</p>
+  </footer>
+
+  <script>
+    // Amount button selection
+    document.querySelectorAll('.amount-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.amount-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+      });
+    });
+
+    // Subtle scroll fade-in for sections
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+        }
+      });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.sobre-grid, .compra-inner, .donativo-inner, .historias-inner').forEach(el => {
+      el.style.opacity = '0';
+      el.style.transform = 'translateY(30px)';
+      el.style.transition = 'opacity 0.8s ease, transform 0.8s ease';
+      observer.observe(el);
+    });
+  </script>
+
+</body>
+</html>
